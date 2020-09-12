@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+
+#PostgreSQL
+  db:
+    image: postgres:12
+    container_name: docker_db
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=dse_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - ./services/scripts/1st.sql:/docker-entrypoint-initdb.d/1st.sql
+      - ./services/scripts/2st.sql:/docker-entrypoint-initdb.d/2st.sql
+    
+#Spring Boot  
+  app:
+    build:
+      context: services/app
+      dockerfile: Dockerfile.development
+    image: dse_java
+    container_name: docker_java
+    ports:
+      - 8090:8090
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/dse_db
+      - WAIT_HOSTS=db:5432
+      - WAIT_HOSTS_TIMEOUT=60
+    depends_on:
+      - db
+
+#pgAdmin4
+  pgadmin4:
+    image: dpage/pgadmin4
+    container_name: docker_pga4
+    restart: always
+    ports:
+     - 80:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: email
+      PGADMIN_DEFAULT_PASSWORD: 123
+
+
